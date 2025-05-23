@@ -109,6 +109,27 @@ module Firebase
           ExpiredTokenError
         end
       end
+
+      # Verifier for Firebase session cookies.
+      class CookieVerifier < JWTVerifier
+        CERTIFICATES_URI = "https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys"
+
+        def initialize(app)
+          super(app, CERTIFICATES_URI)
+        end
+
+        def issuer
+          "https://session.firebase.google.com/#{@project_id}"
+        end
+
+        def invalid_error
+          InvalidTokenError
+        end
+
+        def expired_error
+          ExpiredTokenError
+        end
+      end
     end
   end
 end
