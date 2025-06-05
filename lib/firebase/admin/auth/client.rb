@@ -130,6 +130,18 @@ module Firebase
           @user_manager.create_session_cookie(id_token, valid_duration)
         end
 
+        # Generates a password reset link for the user with the specified email address.
+        #
+        # @param [String] email The email address of the user whose password is to be reset.
+        # @param [Hash] action_code_settings Optional settings for the password reset link.
+        # @option action_code_settings [String] :url The URL to redirect to after the password reset.
+        # @option action_code_settings [Boolean] :handle_code_in_app Whether to handle the code in the app.
+        #
+        # @return [String] The generated password reset link.
+        def generate_password_reset_link(email, action_code_settings = {})
+          @user_manager.generate_password_reset_link(email, action_code_settings)
+        end
+
         private
 
         # Checks if an ID token has been revoked.

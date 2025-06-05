@@ -106,6 +106,33 @@ module Firebase
           @client.post("projects/#{@project_id}:createSessionCookie", payload).body
         end
 
+        # Generates a password reset link for the user with the specified email address.
+        #
+        # @param [String] email The email address of the user whose password is to be reset.
+        # @param [Hash] action_code_settings Optional settings for the password reset link.
+        # @option action_code_settings [String] :url The URL to redirect to after the password reset.
+        # @option action_code_settings [Boolean] :handle_code_in_app Whether to handle the code in the app.
+        #
+        # @return [String] The generated password reset link.
+        def generate_password_reset_link(email, action_code_settings = {})
+          validate_email(email, required: true)
+          
+          payload = {
+            requestType: "PASSWORD_RESET",
+            email: email
+          }
+
+          if action_code_settings.any?
+            payload[:actionCodeSettings] = {
+              url: action_code_settings[:url],
+              handleCodeInApp: action_code_settings[:handle_code_in_app]
+            }.compact
+          end
+
+          response = @client.post(with_path("accounts:sendOobCode"), payload).body
+          response["oobLink"]
+        end
+
         private
 
         def with_path(path)
