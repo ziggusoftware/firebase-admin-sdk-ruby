@@ -79,6 +79,25 @@ module Firebase
           @client.post(with_path("accounts:delete"), {localId: validate_uid(uid, required: true)})
         end
 
+        # Updates the email verification status of an existing user account.
+        #
+        # @param [String] uid The id of the user to update.
+        # @param [Boolean] email_verified A boolean indicating whether or not the user's primary email is verified.
+        #
+        # @raise [ArgumentError] if the uid is invalid.
+        # @raise [Error] if the user cannot be updated.
+        #
+        # @return [UserRecord]
+        def update_user(uid:, email_verified:)
+          payload = {
+            localId: validate_uid(uid, required: true),
+            emailVerified: to_boolean(email_verified)
+          }
+
+          @client.post(with_path("accounts:update"), payload)
+          get_user_by(uid: uid)
+        end
+
         def create_session_cookie(id_token, valid_duration = 432000)
           payload = {
             idToken: id_token,

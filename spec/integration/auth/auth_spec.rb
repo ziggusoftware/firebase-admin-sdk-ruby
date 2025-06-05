@@ -97,6 +97,73 @@ describe "Firebase::Admin::Auth::Client" do
     end
   end
 
+  describe "#update_user" do
+    context "when updating email_verified status" do
+      it "should update the user's email verification status" do
+        with_emulator do
+          user = app.auth.create_user(email: "test@example.com", password: "123456")
+          expect(user).to_not be_nil
+          expect(user.email_verified?).to be_falsey
+
+          updated_user = app.auth.update_user(uid: user.uid, email_verified: true)
+          expect(updated_user).to_not be_nil
+          expect(updated_user).to be_a(Firebase::Admin::Auth::UserRecord)
+          expect(updated_user.email_verified?).to be_truthy
+        end
+      end
+
+      it "should unverify the user's email when set to false" do
+        with_emulator do
+          user = app.auth.create_user(email: "test@example.com", password: "123456", email_verified: true)
+          expect(user).to_not be_nil
+          expect(user.email_verified?).to be_truthy
+
+          updated_user = app.auth.update_user(uid: user.uid, email_verified: false)
+          expect(updated_user).to_not be_nil
+          expect(updated_user).to be_a(Firebase::Admin::Auth::UserRecord)
+          expect(updated_user.email_verified?).to be_falsey
+        end
+      end
+    end
+
+    context "when updating multiple fields" do
+      it "should update all specified fields" do
+        with_emulator do
+          user = app.auth.create_user(email: "test@example.com", password: "123456")
+          expect(user).to_not be_nil
+
+          updated_user = app.auth.update_user(
+            uid: user.uid,
+            display_name: "Updated Name",
+            photo_url: "https://example.com/photo.jpg",
+            disabled: true
+          )
+
+          expect(updated_user).to_not be_nil
+          expect(updated_user).to be_a(Firebase::Admin::Auth::UserRecord)
+          expect(updated_user.display_name).to eq("Updated Name")
+          expect(updated_user.photo_url).to eq("https://example.com/photo.jpg")
+          expect(updated_user.disabled?).to be_truthy
+        end
+      end
+    end
+
+    context "when updating password" do
+      it "should update the user's password" do
+        with_emulator do
+          user = app.auth.create_user(email: "test@example.com", password: "123456")
+          expect(user).to_not be_nil
+
+          app.auth.update_user(uid: user.uid, password: "newpassword123")
+          
+          # Verify the password was updated by attempting to sign in
+          sign_in_result = sign_in_with_email_password(email: "test@example.com", password: "newpassword123")
+          expect(sign_in_result["idToken"]).to_not be_nil
+        end
+      end
+    end
+  end
+
   describe "#verify_id_token" do
     it "should return the verified claims" do
       with_emulator do
