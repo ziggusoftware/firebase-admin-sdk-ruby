@@ -119,7 +119,8 @@ module Firebase
           
           payload = {
             requestType: "PASSWORD_RESET",
-            email: email
+            email: email,
+            returnOobLink: true
           }
 
           if action_code_settings.any?
