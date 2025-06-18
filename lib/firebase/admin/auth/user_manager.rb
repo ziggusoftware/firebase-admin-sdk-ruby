@@ -20,12 +20,12 @@ module Firebase
         # Creates a new user account with the specified properties.
         #
         # @param [String, nil] uid The id to assign to the newly created user.
-        # @param [String, nil] display_name The user’s display name.
-        # @param [String, nil] email The user’s primary email.
-        # @param [Boolean, nil] email_verified A boolean indicating whether or not the user’s primary email is verified.
-        # @param [String, nil] phone_number The user’s primary phone number.
-        # @param [String, nil] photo_url The user’s photo URL.
-        # @param [String, nil] password The user’s raw, unhashed password.
+        # @param [String, nil] display_name The user's display name.
+        # @param [String, nil] email The user's primary email.
+        # @param [Boolean, nil] email_verified A boolean indicating whether or not the user's primary email is verified.
+        # @param [String, nil] phone_number The user's primary phone number.
+        # @param [String, nil] photo_url The user's photo URL.
+        # @param [String, nil] password The user's raw, unhashed password.
         # @param [Boolean, nil] disabled A boolean indicating whether or not the user account is disabled.
         #
         # @raise [CreateUserError] if a user cannot be created.
@@ -79,20 +79,32 @@ module Firebase
           @client.post(with_path("accounts:delete"), {localId: validate_uid(uid, required: true)})
         end
 
-        # Updates the email verification status of an existing user account.
+        # Updates an existing user account with the specified properties.
         #
         # @param [String] uid The id of the user to update.
-        # @param [Boolean] email_verified A boolean indicating whether or not the user's primary email is verified.
+        # @param [String, nil] display_name The user's display name.
+        # @param [String, nil] email The user's primary email.
+        # @param [Boolean, nil] email_verified A boolean indicating whether or not the user's primary email is verified.
+        # @param [String, nil] phone_number The user's primary phone number.
+        # @param [String, nil] photo_url The user's photo URL.
+        # @param [String, nil] password The user's raw, unhashed password.
+        # @param [Boolean, nil] disabled A boolean indicating whether or not the user account is disabled.
         #
         # @raise [ArgumentError] if the uid is invalid.
         # @raise [Error] if the user cannot be updated.
         #
         # @return [UserRecord]
-        def update_user(uid:, email_verified:)
+        def update_user(uid:, display_name: nil, email: nil, email_verified: nil, phone_number: nil, photo_url: nil, password: nil, disabled: nil)
           payload = {
             localId: validate_uid(uid, required: true),
-            emailVerified: to_boolean(email_verified)
-          }
+            displayName: validate_display_name(display_name),
+            email: validate_email(email),
+            phoneNumber: validate_phone_number(phone_number),
+            photoUrl: validate_photo_url(photo_url),
+            password: validate_password(password),
+            emailVerified: to_boolean(email_verified),
+            disabled: to_boolean(disabled)
+          }.compact
 
           @client.post(with_path("accounts:update"), payload)
           get_user_by(uid: uid)
