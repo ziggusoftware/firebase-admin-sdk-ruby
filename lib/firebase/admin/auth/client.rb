@@ -142,6 +142,26 @@ module Firebase
           @user_manager.generate_password_reset_link(email, action_code_settings)
         end
 
+        # Imports the specified list of users into Firebase Auth.
+        #
+        # At most 1000 users can be imported at a time. This operation is optimized for bulk imports
+        # and ignores checks on identifier uniqueness, which could result in duplications. The
+        # hash_alg parameter must be specified when importing users with passwords.
+        #
+        # @param [Array<ImportUserRecord>] users A list of ImportUserRecord instances to import.
+        #   Length of the list must not exceed 1000.
+        # @param [UserImportHash, nil] hash_alg A UserImportHash object (optional). Required when
+        #   importing users with passwords.
+        #
+        # @raise [ArgumentError] If the users array is invalid or exceeds 1000 users.
+        # @raise [ArgumentError] If users with passwords are provided but no hash_alg is specified.
+        # @raise [Error] If the import operation fails.
+        #
+        # @return [UserImportResult] An object summarizing the result of the import operation.
+        def import_users(users, hash_alg = nil)
+          @user_manager.import_users(users, hash_alg)
+        end
+
         private
 
         # Checks if an ID token has been revoked.

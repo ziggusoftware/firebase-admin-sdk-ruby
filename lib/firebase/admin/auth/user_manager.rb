@@ -146,10 +146,66 @@ module Firebase
           response["oobLink"]
         end
 
+        # Imports the specified list of users into Firebase Auth.
+        #
+        # At most 1000 users can be imported at a time. This operation is optimized for bulk imports
+        # and ignores checks on identifier uniqueness, which could result in duplications. The
+        # hash_alg parameter must be specified when importing users with passwords.
+        #
+        # @param [Array<ImportUserRecord>] users A list of ImportUserRecord instances to import.
+        #   Length of the list must not exceed 1000.
+        # @param [UserImportHash, nil] hash_alg A UserImportHash object (optional). Required when
+        #   importing users with passwords.
+        #
+        # @raise [ArgumentError] If the users array is invalid or exceeds 1000 users.
+        # @raise [ArgumentError] If users with passwords are provided but no hash_alg is specified.
+        # @raise [Error] If the import operation fails.
+        #
+        # @return [UserImportResult] An object summarizing the result of the import operation.
+        def import_users(users, hash_alg = nil)
+          validate_users_array(users)
+          validate_hash_alg_for_passwords(users, hash_alg)
+
+          payload = {
+            users: users.map(&:to_h)
+          }
+
+          if hash_alg
+            payload[:hashConfig] = hash_alg.to_h
+          end
+
+          response = @client.post(with_path("accounts:batchCreate"), payload).body
+          UserImportResult.from_api_response(response)
+        end
+
         private
 
         def with_path(path)
           "projects/#{@project_id}/#{path}"
+        end
+
+        def validate_users_array(users)
+          raise ArgumentError, "users must be an array" unless users.is_a?(Array)
+          raise ArgumentError, "users array must not be empty" if users.empty?
+          raise ArgumentError, "users array must not contain more than 1000 elements" if users.length > 1000
+          
+          users.each_with_index do |user, index|
+            unless user.is_a?(ImportUserRecord)
+              raise ArgumentError, "users array must contain only ImportUserRecord instances (found #{user.class} at index #{index})"
+            end
+          end
+        end
+
+        def validate_hash_alg_for_passwords(users, hash_alg)
+          users_with_passwords = users.any? { |user| user.password_hash }
+          
+          if users_with_passwords && hash_alg.nil?
+            raise ArgumentError, "hash_alg must be specified when importing users with passwords"
+          end
+          
+          if hash_alg && !hash_alg.is_a?(UserImportHash)
+            raise ArgumentError, "hash_alg must be a UserImportHash instance"
+          end
         end
 
         include Utils
